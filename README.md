@@ -1,53 +1,70 @@
-# GATORNEST-INN PROJECT 
+# Getting Started with Create React App
 
-## Description
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-GatorNest-Inn is a modern, cloud-based solution crafted to simplify and optimize operations for large hotels. Developed with agile methodologies, this system brings together key features like real-time reservation management, guest profiles, staff scheduling, and secure billing, all within an easy-to-use web platform. 
+## Available Scripts
 
-By utilizing a scalable cloud infrastructure and a reliable MySQL database, GatorNest-Inn ensures top-notch performance, security, and dependability. Designed to be intuitive and efficient, this platform not only enhances operational workflows but also elevates the overall guest experience, making it an ideal choice for hotels aiming to grow and thrive in a competitive industry.
+In the project directory, you can run:
 
-### Contributors
+### `npm start`
 
-* Chandra Mouli Dasari
-* Gurudeep Paleti
-* Harsha Vardhan Reddy Palagiri 
-* Tarunkrishna Dasari
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-## Sprint 1
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-### User Stories (Frontend)
+### `npm test`
 
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-___
+### `npm run build`
 
-### User Stories (Backend)
-__Reservation Model__: As a hotel administrator,
-I want to ensure that all our booking are securely stored in a MySQL database,
-So that we can quickly and safely access data.
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-__Guest Information & Payment Information Storage__: As a hotel administrator,
-I want a secure system to manage guest profiles and billing information,
-So that I can keep personal data and payment details safe and private.
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-__Staff Scheduler__: As a hotel manager,
-I want to create and update staff schedules within the system,
-So that I can reduce scheduling conflicts & ensure resources are used effectively.
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-__Secure Payment Processor__: As a guest,
-I want the backend to securely handle my payment transactions,
-So that I can be confident that my transaction is safe and protected.
+### `npm run eject`
 
-__Room Availability Tracker__: As a backend service,
-I need to track room availability for both current and upcoming reservations,
-So that receptionists can make informed decisions when booking rooms.
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-### What backend issues we planned to address
-"Develop Reservation Model" and "Develop Staff Scheduling"
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-### What backend issues were completed, not completed, and why/why not
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-We completed the reservation model issue but not the staff scheduling issue because it relied on the reservation model issue to be completed first. Since the reservation model schema took longer than usual, we were unable to complete the staff scheduling issue.
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## License
+## Learn More
 
-[MIT](https://choosealicense.com/licenses/mit/)
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
