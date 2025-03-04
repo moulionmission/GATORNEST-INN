@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -34,6 +35,15 @@ type Payment struct {
 	PaymentStatus   string    `json:"payment_status"`
 	Amount          float64   `json:"amount"`
 	TransactionDate time.Time `json:"transaction_date"`
+}
+
+// Room represents a room in the Rooms table.
+type Room struct {
+	RoomID       int     `json:"room_id"`
+	RoomNumber   string  `json:"room_number"`
+	RoomType     string  `json:"room_type"`
+	PricePerNight float64 `json:"price_per_night"`
+	Status       string  `json:"status"`
 }
 
 // initDB loads environment variables and connects to the MySQL database.
@@ -64,6 +74,10 @@ func main() {
 	initDB()
 	router := gin.Default()
 
+	// Enable CORS middleware to allow requests from any origin
+	router.Use(cors.Default()) // This allows all origins, you can configure it further if needed
+
+
 	// ------------------- Guest Endpoints -------------------
 	router.POST("/guests", createGuest)
 	router.GET("/guests", getGuests)
@@ -77,6 +91,10 @@ func main() {
 	router.GET("/payments/:id", getPayment)
 	router.PUT("/payments/:id", updatePayment)
 	router.DELETE("/payments/:id", deletePayment)
+
+	// ------------------- Rooms Endpoints -------------------
+	router.GET("/rooms/:room_type", getAvailableRoomsByType)
+
 
 	// Start the server on PORT defined in .env (default 3000)
 	port := os.Getenv("PORT")
@@ -110,6 +128,45 @@ func createGuest(c *gin.Context) {
 	}
 	guest.GuestID = int(id)
 	c.JSON(http.StatusCreated, guest)
+}
+
+// getAvailableRoomsByType handles GET /rooms/:room_type
+func getAvailableRoomsByType(c *gin.Context) {
+	// Get the room_type from URL params
+	roomType := c.Param("room_type")
+
+	// Check if room_type is valid
+	if roomType != "Single" && roomType != "Double" && roomType != "Suite" && roomType != "Deluxe" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room type"})
+		return
+	}
+
+	// Query available rooms by room_type
+	rows, err := db.Query("SELECT room_id, room_number, room_type, price_per_night, status FROM Rooms WHERE room_type = ? AND status = 'Available'", roomType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching rooms", "details": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var rooms []Room
+	for rows.Next() {
+		var r Room
+		if err := rows.Scan(&r.RoomID, &r.RoomNumber, &r.RoomType, &r.PricePerNight, &r.Status); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning room", "details": err.Error()})
+			return
+		}
+		rooms = append(rooms, r)
+	}
+
+	// Check if no rooms are available for the specified type
+	if len(rooms) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No available rooms found for this room type"})
+		return
+	}
+
+	// Return the list of available rooms
+	c.JSON(http.StatusOK, rooms)
 }
 
 // getGuests handles GET /guests
