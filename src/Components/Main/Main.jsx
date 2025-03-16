@@ -1,5 +1,7 @@
-import React from 'react'
+import React from 'react';
+import { useState } from 'react';
 import './main.css';
+import axios from 'axios';
 import img1 from '../../Assets/image1.jpg';
 import img2 from '../../Assets/image2.jpg';
 import img3 from '../../Assets/image3.jpg';
@@ -104,6 +106,40 @@ const Data = [
 
 
 const Main = () => {
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [availableRoomType, setAvailableRoomType] = useState([]);
+  const [availableRooms, setAvailableRooms] = useState([]); 
+  const [clickedRoomPosition, setClickedRoomPosition] = useState(null);
+
+  const fetchAvailableRooms = async(roomTitle, event) => {
+    try{
+      let roomType = "";
+      if (roomTitle.toLowerCase().includes("single")) {
+        roomType = "Single";
+      } else if (roomTitle.toLowerCase().includes("double")) {
+        roomType = "Double";
+      } else if (roomTitle.toLowerCase().includes("suite")) {
+        roomType = "Suite";
+      } else if (roomTitle.toLowerCase().includes("deluxe")) {
+        roomType = "Deluxe";
+      }
+
+      const response = await axios.get(`http://localhost:3000/rooms/${roomType}`);
+      setAvailableRooms(response.data);
+      setAvailableRoomType(roomType); // Set the type of available rooms
+
+       // Capture the position of the clicked room
+      const rect = event.target.closest('.singleRoom').getBoundingClientRect();
+      setClickedRoomPosition(rect);
+      setSelectedRoom(roomTitle); // Store selected room's info
+    } 
+    catch(error){
+      console.error("Error fetching available rooms:", error);
+      setAvailableRooms([]); // Reset on error
+    }
+  };
+
+
   return (
     <section className='main container section'>
 
@@ -143,7 +179,7 @@ const Main = () => {
                     <p>{description}</p>
                   </div>
 
-                  <button className='btn flex'>
+                  <button className='btn flex' onClick={(event) => fetchAvailableRooms(roomTitle, event)}>
                     DETAILS <HiOutlineClipboardCheck className='icon'/>
 
                   </button>
@@ -153,6 +189,20 @@ const Main = () => {
           })
         }
       </div>
+
+      {/* Display available rooms */}
+      {availableRooms.length > 0 && (
+        <div className="availableRooms">
+          <h3>Available {availableRoomType} Rooms</h3>
+          <ul>
+            {availableRooms.map((room, index) => (
+              <li key={index}>
+                Room {room.room_number} - ${room.price_per_night} - {room.status}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
     </section>
   )
