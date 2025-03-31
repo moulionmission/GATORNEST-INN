@@ -11,14 +11,25 @@ DROP TABLE IF EXISTS Reservations;
 DROP TABLE IF EXISTS Staff;
 DROP TABLE IF EXISTS Rooms;
 DROP TABLE IF EXISTS Guests;
+DROP TABLE IF EXISTS Users;
 
--- Create Guests Table
+-- Users table for storing login credentials
+CREATE TABLE Users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Guests Table (linked to Users)
 CREATE TABLE Guests (
     guest_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
 );
 
 -- Create Rooms Table
