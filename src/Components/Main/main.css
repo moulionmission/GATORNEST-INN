@@ -132,7 +132,6 @@
   align-self: center;
   font-size: 18px;
 }
-<<<<<<< HEAD
 
 @media screen and (min-width: 500px) {
   .title {
@@ -306,7 +305,6 @@
   }
 }
 /*# sourceMappingURL=main.css.map */
-=======
 :root {
   --PrimaryColor: hsl(199, 100%, 33%);
   --SecondaryColor: hsl(187, 85%, 43%);
@@ -449,7 +447,6 @@
   font-weight: bold;
   color: #333;
 }
-
 .availableRooms {
   padding: 15px;
   background-color: #fff;
@@ -458,4 +455,3 @@
   max-height: 300px;
   overflow-y: auto;
 }
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef

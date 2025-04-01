@@ -12,12 +12,7 @@ const App = () => {
     <Navbar/>
     <Home/>
     <Main/>
-<<<<<<< HEAD
-    <Footer/>
-=======
-     {/* <Footer/> */}
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef
-    
+    <Footer/>    
     </>
   )
 }
