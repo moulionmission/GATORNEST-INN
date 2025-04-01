@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import './Login.css';
+import { useNavigate } from 'react-router-dom';
 
 const Login = ({ onToggle }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate(); // Initialize the navigate function
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -11,8 +13,12 @@ const Login = ({ onToggle }) => {
     // Handle login logic here
 
     if(email == 'tarund2302@gmail.com'){
-      console.log('Email is right g');
-      localStorage.setItem()
+      console.log('Email is right');
+      localStorage.setItem('userEmail', email); // Store email in localStorage (optional)
+      navigate('/home'); // Redirect to homepage
+    }
+    else {
+      console.log('Wrong email');
     }
 
   };

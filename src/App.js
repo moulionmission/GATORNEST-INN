@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import ReactDOM from 'react-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import "./app.css"
 import Navbar from './Components/Navbar/Navbar'
 import Home from './Components/Home/Home'
@@ -27,29 +29,32 @@ const App = () => {
   };
 
   return (
-    <>
+    <Router> {/* Wrap the entire app with BrowserRouter */}
       <Navbar />
-      {user ? (
-        <>
-          <Home />
-          <Main />
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
-          {/* <Footer /> */}
-        </>
-      ) : (
-        <div className="auth-wrapper">
-          {isRegistered ? (
-            <Login onToggle={() => setIsRegistered(false)} onLogin={handleLogin} />
-          ) : (
-            <Register onToggle={() => setIsRegistered(true)} onRegister={handleRegister} />
-          )}
+      <Routes>
+        <Route path="/" element={
+          user ? <Home /> : 
+          <div className="auth-wrapper">
+            {isRegistered ? (
+              <Login onToggle={() => setIsRegistered(false)} onLogin={handleLogin} />
+            ) : (
+              <Register onToggle={() => setIsRegistered(true)} onRegister={handleRegister} />
+            )}
+          </div>
+        }/>
 
-        </div>
-      )}
-    </>
+        {/* Assign a separate route for the Home page */}
+        <Route path="/home" element={
+          <>
+            <Home />
+            <Main />
+          </>
+          
+          
+          } />
+      </Routes>
+    </Router>
   );
 };
 
-export default App
+export default App;
