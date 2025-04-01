@@ -89,6 +89,116 @@ body{
     background: var(--bodyColor);
 }
 
+/* ========== AUTH FORMS ========== */
+.auth-container {
+    background: var(--whiteColor);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 3rem auto;
+}
+
+.auth-container h2 {
+    color: var(--PrimaryColor);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-container input {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--inputColor);
+    border-radius: 8px;
+    background-color: var(--whiteColorDeam);
+    color: var(--blackColor);
+    transition: border 0.2s ease;
+}
+
+.auth-container input:focus {
+    border-color: var(--PrimaryColor);
+    outline: none;
+}
+
+.auth-container button {
+    padding: 12px;
+    background: var(--gradientColor);
+    color: var(--whiteColor);
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.auth-container button:hover {
+    background: var(--SecondaryColor);
+}
+
+.auth-container p {
+    margin-top: 1rem;
+    color: var(--textColor);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-container p span {
+    color: var(--PrimaryColor);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.auth-container p span:hover {
+    color: var(--SecondaryColor);
+}
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    background-color: var(--bodyColor);
+}
+
+
+/* ========== LOGOUT BUTTON ========== */
+.logout-btn {
+    padding: 12px 20px;
+    background: var(--SecondaryColor);
+    color: var(--whiteColor);
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: block;
+    width: fit-content;
+    margin: 1.5rem auto;
+}
+
+.logout-btn:hover {
+    background: hsl(187, 85%, 38%);
+}
+
+.link {
+    color: var(--PrimaryColor);
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.link:hover {
+    color: var(--SecondaryColor);
+}
+
 @media screen and (min-width: 1240px) {
     .container{
         width: 80% !important;
@@ -98,4 +208,3 @@ body{
         padding: 6rem 0 4rem;
     }
 }
-
