@@ -1,0 +1,98 @@
+:root{
+    --PrimaryColor: hsl(199, 100%, 33%);
+    --SecondaryColor: hsl(187, 85%, 43%);
+    --gradientColor: linear-gradient(to right, hsl(187, 85%, 43%), hsl(199, 100%, 33%));
+    --whiteColor: hsl(0, 0%, 100%);
+    --blackColor: hsl(201, 33%, 16%);
+    --textColor: hsl(240, 4%, 36%);
+    --whiteColorDeam: hsl(0, 0%, 93%);
+    --greyText: rgb(190, 190, 190);
+    --inputColor: rgb(239, 239, 239);
+    --bodyColor: rgb(240, 240, 240);
+    --cardBG: rgb(225, 225, 235);
+}
+
+.login-container {
+    background: var(--whiteColor);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 3rem auto;
+}
+
+.login-container h2 {
+    color: var(--blackColor);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-container input {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--inputColor);
+    border-radius: 8px;
+    background-color: var(--whiteColorDeam);
+    color: var(--blackColor);
+    transition: border 0.2s ease;
+}
+
+.login-container input:focus {
+    border-color: var(--PrimaryColor);
+    outline: none;
+}
+
+.login-container button {
+    padding: 0px 12px;
+    background: var(--gradientColor);
+    color: var(--whiteColor);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 20px;
+    height: 50px;
+    width: 80%;
+    display: block;
+    margin: 0 auto; /* Centers horizontally */
+    align-items: center; /* Center text vertically */
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-container button:hover {
+    background: var(--SecondaryColor);
+}
+
+.login-container p {
+    margin-top: 1rem;
+    color: var(--textColor);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.login-container p span {
+    color: var(--PrimaryColor);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.login-container p span:hover {
+    color: var(--SecondaryColor);
+}
+
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    background-color: var(--bodyColor);
+}
+
