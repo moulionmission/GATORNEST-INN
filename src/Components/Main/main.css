@@ -132,6 +132,181 @@
   align-self: center;
   font-size: 18px;
 }
+<<<<<<< HEAD
+
+@media screen and (min-width: 500px) {
+  .title {
+    font-size: 1.5rem;
+  }
+  .title::after {
+    width: 155px !important;
+  }
+  .secContent {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .secContent .singleRoom {
+    height: auto;
+  }
+}
+@media screen and (min-width: 840px) {
+  .secContent {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .secContent .singleRoom {
+    height: auto;
+  }
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.roomDetails {
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.roomDetails p {
+  margin: 5px 0;
+}
+
+/* Modal Background */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Content */
+.modalContent {
+  background: #fff;
+  width: 280px; /* Further reduced width */
+  padding: 12px; /* Smaller padding */
+  border-radius: 8px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  position: relative;
+  -webkit-animation: fadeIn 0.2s ease-in-out;
+          animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Modal Heading */
+/* Modal Heading */
+.modalContent h2 {
+  font-size: 6px; /* Reduced from 16px */
+  margin-bottom: 3px; /* Adjusted spacing */
+  color: #333;
+}
+
+/* Form Fields */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 8px; /* Reduced spacing */
+}
+
+.formGroup label {
+  font-weight: 600;
+  font-size: 12px; /* Smaller text */
+  margin-bottom: 3px;
+  color: #444;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 5px; /* Smaller padding */
+  border: 1px solid #bbb;
+  border-radius: 5px;
+  font-size: 12px; /* Smaller font */
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.formGroup input:focus {
+  border-color: #007bff;
+  box-shadow: 0px 0px 2px rgba(0, 123, 255, 0.5);
+}
+
+/* Buttons */
+.btn1 {
+  width: 100%;
+  padding: 7px; /* Smaller button */
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px; /* Smaller font */
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+.cancel {
+  background: #ccc;
+  color: #333;
+}
+
+.cancel:hover {
+  background: #999;
+}
+
+/* Animation */
+@-webkit-keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/*# sourceMappingURL=main.css.map */
+=======
 :root {
   --PrimaryColor: hsl(199, 100%, 33%);
   --SecondaryColor: hsl(187, 85%, 43%);
@@ -283,3 +458,4 @@
   max-height: 300px;
   overflow-y: auto;
 }
+>>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef

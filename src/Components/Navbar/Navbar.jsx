@@ -33,27 +33,25 @@ const Navbar = () => {
             </li>
 
             <li className="navItem">
-              <a href="#" className="navLink">Packages</a>
+              <a href="#" className="navLink">Staff</a>
             </li>
 
             <li className="navItem">
-              <a href="#" className="navLink">Shop</a>
+              <a href="https://dineoncampus.com/UF/transact-mobile-ordering" className="navLink">Order</a>
             </li>
 
             <li className="navItem">
-              <a href="#" className="navLink">About</a>
+              <a href="https://union.ufl.edu/hotel/" className="navLink">About</a>
             </li>
 
-            <li className="navItem">
-              <a href="#" className="navLink">Pages</a>
-            </li>
+            
 
             <li className="navItem">
               <a href="#" className="navLink">News</a>
             </li>
 
             <button className='btn'>
-              <a href="#">BOOK NOW</a>
+              <a href="#">AVATAR....</a>
             </button>
           </ul>
 

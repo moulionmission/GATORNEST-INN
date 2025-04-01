@@ -21,6 +21,10 @@
 
 }
 
+html{
+    scroll-behavior: smooth;
+}
+
 a{
     text-decoration: none;
 }
@@ -193,4 +197,14 @@ body{
 
 .link:hover {
     color: var(--SecondaryColor);
+}
+
+@media screen and (min-width: 1240px) {
+    .container{
+        width: 80% !important;
+        margin: auto !important;
+    }
+    .section{
+        padding: 6rem 0 4rem;
+    }
 }

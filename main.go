@@ -6,17 +6,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
-	"github.com/joho/godotenv"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Global DB variable
 var db *sql.DB
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 // Guest represents the guest profile as defined in the Guests table.
 type Guest struct {
@@ -25,6 +29,14 @@ type Guest struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
+	UserID    int    `json:"user_id,omitempty"` // Set automatically from JWT
+}
+
+type User struct {
+	UserID    int       `json:"user_id"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password,omitempty"` // Raw password from request (not stored)
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 // Payment represents the payment record as defined in the Payments table.
@@ -37,13 +49,16 @@ type Payment struct {
 	TransactionDate time.Time `json:"transaction_date"`
 }
 
-// Room represents a room in the Rooms table.
-type Room struct {
-	RoomID       int     `json:"room_id"`
-	RoomNumber   string  `json:"room_number"`
-	RoomType     string  `json:"room_type"`
-	PricePerNight float64 `json:"price_per_night"`
-	Status       string  `json:"status"`
+type Reservation struct {
+	ReservationID int       `json:"reservation_id"`
+	GuestID       int       `json:"guest_id"`
+	RoomID        int       `json:"room_id"`
+	CheckInDate   string    `json:"check_in_date"`
+	CheckOutDate  string    `json:"check_out_date"`
+	Status        string    `json:"status"`
+	TotalPrice    float64   `json:"total_price"`
+	CreatedAt     time.Time `json:"created_at"`
+	UserID        int       `json:"user_id,omitempty"` // added for linking to logged-in user
 }
 
 // initDB loads environment variables and connects to the MySQL database.
@@ -73,17 +88,23 @@ func initDB() {
 func main() {
 	initDB()
 	router := gin.Default()
+	router.POST("/register", registerUser)
+	router.POST("/login", loginUser)
 
-	// Enable CORS middleware to allow requests from any origin
-	router.Use(cors.Default()) // This allows all origins, you can configure it further if needed
+	// Protected Guest routes
+	auth := router.Group("/")
+	auth.Use(AuthMiddleware())
+	{
+		auth.POST("/guests", createGuest)
+		auth.GET("/guests", getGuests)
+		auth.GET("/guests/:id", getGuest)
+		auth.PUT("/guests/:id", updateGuest)
+		auth.DELETE("/guests/:id", deleteGuest)
 
+		auth.GET("/profile", getProfile)
+		auth.POST("/reservations", createReservation)
 
-	// ------------------- Guest Endpoints -------------------
-	router.POST("/guests", createGuest)
-	router.GET("/guests", getGuests)
-	router.GET("/guests/:id", getGuest)
-	router.PUT("/guests/:id", updateGuest)
-	router.DELETE("/guests/:id", deleteGuest)
+	}
 
 	// ------------------- Payment Endpoints -------------------
 	router.POST("/payments", createPayment)
@@ -91,10 +112,6 @@ func main() {
 	router.GET("/payments/:id", getPayment)
 	router.PUT("/payments/:id", updatePayment)
 	router.DELETE("/payments/:id", deletePayment)
-
-	// ------------------- Rooms Endpoints -------------------
-	router.GET("/rooms/:room_type", getAvailableRoomsByType)
-
 
 	// Start the server on PORT defined in .env (default 3000)
 	port := os.Getenv("PORT")
@@ -115,58 +132,43 @@ func createGuest(c *gin.Context) {
 		return
 	}
 
-	result, err := db.Exec("INSERT INTO Guests (first_name, last_name, email, phone) VALUES (?, ?, ?, ?)",
-		guest.FirstName, guest.LastName, guest.Email, guest.Phone)
+	// Get user_id from JWT context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	userID := userIDInterface.(int)
+	guest.UserID = userID
+
+	result, err := db.Exec(
+		"INSERT INTO Guests (first_name, last_name, email, phone, user_id) VALUES (?, ?, ?, ?, ?)",
+		guest.FirstName, guest.LastName, guest.Email, guest.Phone, guest.UserID,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating guest", "details": err.Error()})
 		return
 	}
+
 	id, err := result.LastInsertId()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving guest id", "details": err.Error()})
 		return
 	}
 	guest.GuestID = int(id)
+
 	c.JSON(http.StatusCreated, guest)
 }
 
-// getAvailableRoomsByType handles GET /rooms/:room_type
-func getAvailableRoomsByType(c *gin.Context) {
-	// Get the room_type from URL params
-	roomType := c.Param("room_type")
+// getProfile handles GET /profile
+func getProfile(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	email, _ := c.Get("email")
 
-	// Check if room_type is valid
-	if roomType != "Single" && roomType != "Double" && roomType != "Suite" && roomType != "Deluxe" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room type"})
-		return
-	}
-
-	// Query available rooms by room_type
-	rows, err := db.Query("SELECT room_id, room_number, room_type, price_per_night, status FROM Rooms WHERE room_type = ? AND status = 'Available'", roomType)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching rooms", "details": err.Error()})
-		return
-	}
-	defer rows.Close()
-
-	var rooms []Room
-	for rows.Next() {
-		var r Room
-		if err := rows.Scan(&r.RoomID, &r.RoomNumber, &r.RoomType, &r.PricePerNight, &r.Status); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning room", "details": err.Error()})
-			return
-		}
-		rooms = append(rooms, r)
-	}
-
-	// Check if no rooms are available for the specified type
-	if len(rooms) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "No available rooms found for this room type"})
-		return
-	}
-
-	// Return the list of available rooms
-	c.JSON(http.StatusOK, rooms)
+	c.JSON(http.StatusOK, gin.H{
+		"user_id": userID,
+		"email":   email,
+	})
 }
 
 // getGuests handles GET /guests
@@ -346,4 +348,173 @@ func deletePayment(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Payment deleted successfully"})
+}
+
+// isValidEmail performs basic regex check for valid email format
+func isValidEmail(email string) bool {
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return re.MatchString(email)
+}
+
+// registerUser handles POST /register
+func registerUser(c *gin.Context) {
+	var user User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	if !isValidEmail(user.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email format"})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
+		return
+	}
+
+	result, err := db.Exec("INSERT INTO Users (email, password_hash) VALUES (?, ?)", user.Email, hashedPassword)
+	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	user.UserID = int(id)
+	user.Password = "" // Clear password before sending back
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User registered successfully",
+		"user_id": user.UserID,
+	})
+}
+
+// loginUser handles POST /login
+func loginUser(c *gin.Context) {
+	var loginData struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	if !isValidEmail(loginData.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email format"})
+		return
+	}
+
+	var storedHash string
+	var userID int
+
+	err := db.QueryRow("SELECT user_id, password_hash FROM Users WHERE email = ?", loginData.Email).
+		Scan(&userID, &storedHash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error during login", "details": err.Error()})
+		}
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(loginData.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	// Create JWT
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": userID,
+		"email":   loginData.Email,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	})
+
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   tokenString,
+	})
+}
+
+// AuthMiddleware verifies the JWT token and sets user info in context
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			c.Abort()
+			return
+		}
+
+		tokenStr := authHeader
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+			return jwtSecret, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		// Add user info to context
+		c.Set("user_id", int(claims["user_id"].(float64)))
+		c.Set("email", claims["email"].(string))
+
+		c.Next()
+	}
+}
+func createReservation(c *gin.Context) {
+	var reservation Reservation
+	if err := c.ShouldBindJSON(&reservation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON provided"})
+		return
+	}
+
+	// Extract user_id from JWT context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	reservation.UserID = userIDInterface.(int)
+
+	result, err := db.Exec(`
+		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price, user_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
+		reservation.CheckOutDate, reservation.Status, reservation.TotalPrice, reservation.UserID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating reservation", "details": err.Error()})
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	reservation.ReservationID = int(id)
+
+	c.JSON(http.StatusCreated, reservation)
 }
