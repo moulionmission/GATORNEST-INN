@@ -1,5 +1,7 @@
 Project Documentation - Sprint 3 Updates
 
+Demo Video: https://drive.google.com/file/d/1-lcOqpQGe7xOU7GreFO7C5n0pOZzp6HN/view?usp=sharing
+
 ___FRONTEND___
 
 In sprint 3, significant updates were made to improve user interaction and user interface design, leveraging animations and modal pop-ups. The AOS library was introduced to provide scroll-based animations, enhancing the user experience. Additionally, a booking modal was added to facilitate room reservations, incorporating functionality for fee calculation and data input forms.
