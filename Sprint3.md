@@ -1,6 +1,6 @@
 Project Documentation - Sprint 3 Updates
 
-Demo Video: https://drive.google.com/file/d/1-lcOqpQGe7xOU7GreFO7C5n0pOZzp6HN/view?usp=sharing
+Demo Video: https://drive.google.com/file/d/1-lcOqpQGe7xOU7GreFO7C5n0pOZzp6HN/preview
 
 ___FRONTEND___
 
