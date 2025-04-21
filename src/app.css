@@ -89,6 +89,16 @@ body{
     background: var(--bodyColor);
 }
 
+@media screen and (min-width: 1240px) {
+    .container{
+        width: 80% !important;
+        margin: auto !important;
+    }
+    .section{
+        padding: 6rem 0 4rem;
+    }
+}
+
 /* ========== AUTH FORMS ========== */
 .auth-container {
     background: var(--whiteColor);
