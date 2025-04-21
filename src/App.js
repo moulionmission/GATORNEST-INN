@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
-import ReactDOM from 'react-dom';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import "./app.css"
-import Navbar from './Components/Navbar/Navbar'
-import Home from './Components/Home/Home'
-import Main from './Components/Main/Main'
-import Footer from './Components/Footer/Footer'
+import "./app.css";
 
+import Navbar from './Components/Navbar/Navbar';
+import Home from './Components/Home/Home';
+import Main from './Components/Main/Main';
+import Footer from './Components/Footer/Footer';
 import Login from './Components/Login/Login';
 import Register from './Components/Register/Register';
+import AdminScheduler from './Components/adminscheduler/adminscheduler'; // ✅ Add this
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -29,40 +29,33 @@ const App = () => {
   };
 
   return (
-    <>
-    <Navbar/>
-    <Home/>
-    <Main/>
-    <Footer/>    
-    </>
-  )
-}
-
-export default App
-    <Router> {/* Wrap the entire app with BrowserRouter */}
+    <Router>
       <Navbar />
       <Routes>
         <Route path="/" element={
-          user ? <Home /> : 
-          <div className="auth-wrapper">
-            {isRegistered ? (
-              <Login onToggle={() => setIsRegistered(false)} onLogin={handleLogin} />
-            ) : (
-              <Register onToggle={() => setIsRegistered(true)} onRegister={handleRegister} />
-            )}
-          </div>
-        }/>
+          user ? (
+            <Home />
+          ) : (
+            <div className="auth-wrapper">
+              {isRegistered ? (
+                <Login onToggle={() => setIsRegistered(false)} onLogin={handleLogin} />
+              ) : (
+                <Register onToggle={() => setIsRegistered(true)} onRegister={handleRegister} />
+              )}
+            </div>
+          )
+        } />
 
-        {/* Assign a separate route for the Home page */}
         <Route path="/home" element={
           <>
             <Home />
             <Main />
           </>
-          
-          
-          } />
+        } />
+
+        <Route path="/staff" element={<AdminScheduler />} /> {/* ✅ Staff scheduler route */}
       </Routes>
+      <Footer />
     </Router>
   );
 };
