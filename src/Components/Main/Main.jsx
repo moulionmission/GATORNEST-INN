@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import React,{useEffect, useState} from 'react';
-=======
-import React from 'react';
-import { useState } from 'react';
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef
 import './main.css';
 import axios from 'axios';
 import img1 from '../../Assets/image1.jpg';
@@ -112,7 +107,6 @@ const Data = [
 
 
 const Main = () => {
-<<<<<<< HEAD
 
 
 
@@ -127,7 +121,8 @@ const Main = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [totalFee, setTotalFee] = useState(0);
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
 
   // Function to calculate total fee based on days selected
@@ -174,14 +169,49 @@ const Main = () => {
 
   // Function to handle booking confirmation
   const handleBookingConfirm = () => {
-    console.log("Booking confirmed!", { 
+    /*console.log("Booking confirmed!", { 
         name, 
         email, 
         selectedRoomTitle, 
         startDate, 
         endDate, 
         totalFee 
-    });
+    });*/
+
+    // Prepare the reservation data to be sent to the backend
+    const reservationData = {
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      guest_id: 1,  
+      room_id: 3, 
+      check_in_date: startDate,
+      check_out_date: endDate,
+      status: "Pending",
+      total_price: totalFee
+    };
+
+  console.log(reservationData)
+  console.log('user token:', localStorage.getItem('token'))
+
+  axios.post('http://localhost:3000/reservations', reservationData, {
+      headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT token for auth
+            
+          'Content-Type': 'application/json'
+      }
+  })
+  .then(response => {
+      console.log('Reservation created successfully:', response.data);
+      // Handle success, e.g., show a success message, redirect, etc.
+      alert('Reservation successful!');
+      setShowModal(false); // Close modal
+  })
+  .catch(error => {
+      console.error('Error creating reservation:', error);
+      // Handle error, e.g., show an error message
+      alert('Failed to create reservation');
+  });
 
     // Close the modal after logging
     setShowModal(false);
@@ -190,41 +220,6 @@ const Main = () => {
 
   
    
-=======
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [availableRoomType, setAvailableRoomType] = useState([]);
-  const [availableRooms, setAvailableRooms] = useState([]); 
-  const [clickedRoomPosition, setClickedRoomPosition] = useState(null);
-
-  const fetchAvailableRooms = async(roomTitle, event) => {
-    try{
-      let roomType = "";
-      if (roomTitle.toLowerCase().includes("single")) {
-        roomType = "Single";
-      } else if (roomTitle.toLowerCase().includes("double")) {
-        roomType = "Double";
-      } else if (roomTitle.toLowerCase().includes("suite")) {
-        roomType = "Suite";
-      } else if (roomTitle.toLowerCase().includes("deluxe")) {
-        roomType = "Deluxe";
-      }
-
-      const response = await axios.get(`http://localhost:3000/rooms/${roomType}`);
-      setAvailableRooms(response.data);
-      setAvailableRoomType(roomType); // Set the type of available rooms
-
-       // Capture the position of the clicked room
-      const rect = event.target.closest('.singleRoom').getBoundingClientRect();
-      setClickedRoomPosition(rect);
-      setSelectedRoom(roomTitle); // Store selected room's info
-    } 
-    catch(error){
-      console.error("Error fetching available rooms:", error);
-      setAvailableRooms([]); // Reset on error
-    }
-  };
-
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef
 
   return (
     <section className='main container section'>
@@ -267,13 +262,8 @@ const Main = () => {
                     <p>{description}</p>
                   </div>
 
-<<<<<<< HEAD
                   <button className='btn flex' onClick={() => handleBookClick(fee, roomTitle)} >
                     BOOK <HiOutlineClipboardCheck className='icon'/>
-=======
-                  <button className='btn flex' onClick={(event) => fetchAvailableRooms(roomTitle, event)}>
-                    DETAILS <HiOutlineClipboardCheck className='icon'/>
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef
 
                   </button>
                 </div>
@@ -283,7 +273,6 @@ const Main = () => {
         }
       </div>
 
-<<<<<<< HEAD
       {/* Modal Popup Section */}
       {showModal && (
         <div className="modalOverlay">
@@ -295,12 +284,22 @@ const Main = () => {
               <p><strong>One Day Price:</strong> ${selectedRoomFee}</p>
             </div>
             <form>
-            <div className="formGroup">
-                <label>Name:</label>
+              <div className="formGroup">
+                <label>First Name:</label>
                 <input 
                   type="text" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)}
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Enter your name"
+                  required 
+                />
+              </div>
+              <div className="formGroup">
+                <label>Last Name:</label>
+                <input 
+                  type="text" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)}
                   placeholder="Enter your name"
                   required 
                 />
@@ -347,19 +346,6 @@ const Main = () => {
               Close
             </button>
           </div>
-=======
-      {/* Display available rooms */}
-      {availableRooms.length > 0 && (
-        <div className="availableRooms">
-          <h3>Available {availableRoomType} Rooms</h3>
-          <ul>
-            {availableRooms.map((room, index) => (
-              <li key={index}>
-                Room {room.room_number} - ${room.price_per_night} - {room.status}
-              </li>
-            ))}
-          </ul>
->>>>>>> a43a697d35cfd588471a21f7cb22ce92cb04e7ef
         </div>
       )}
 

@@ -9,6 +9,9 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"strings"
+
+	"math/rand"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
@@ -16,6 +19,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/gin-contrib/cors"
 )
 
 // Global DB variable
@@ -50,6 +54,8 @@ type Payment struct {
 }
 
 type Reservation struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 	ReservationID int       `json:"reservation_id"`
 	GuestID       int       `json:"guest_id"`
 	RoomID        int       `json:"room_id"`
@@ -59,6 +65,7 @@ type Reservation struct {
 	TotalPrice    float64   `json:"total_price"`
 	CreatedAt     time.Time `json:"created_at"`
 	UserID        int       `json:"user_id,omitempty"` // added for linking to logged-in user
+	Email     string    `json:"email"`
 }
 
 // initDB loads environment variables and connects to the MySQL database.
@@ -88,6 +95,17 @@ func initDB() {
 func main() {
 	initDB()
 	router := gin.Default()
+
+	// Apply CORS middleware (allowing requests from http://localhost:3001)
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3001"}, // React frontend's URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+
+
+
 	router.POST("/register", registerUser)
 	router.POST("/login", loginUser)
 
@@ -120,6 +138,19 @@ func main() {
 	}
 	log.Printf("Server running on port %s", port)
 	router.Run(":" + port)
+}
+
+// GenerateRandomPhoneNumber creates a random 10-digit phone number
+func GenerateRandomPhoneNumber() string {
+	rand.Seed(time.Now().UnixNano())
+
+	// Generate random digits
+	areaCode := rand.Intn(900) + 100 // Ensures a 3-digit number (100-999)
+	prefix := rand.Intn(900) + 100   // Ensures a 3-digit number (100-999)
+	lineNumber := rand.Intn(10000)   // Ensures a 4-digit number (0000-9999)
+
+	// Format as a phone number
+	return fmt.Sprintf("%d-%d-%04d", areaCode, prefix, lineNumber)
 }
 
 // ------------------- Guest Handlers -------------------
@@ -453,28 +484,66 @@ func loginUser(c *gin.Context) {
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		fmt.Println("Received Authorization Header:", authHeader) // Debugging line
+
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
 
-		tokenStr := authHeader
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return jwtSecret, nil
+		// Extract token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		fmt.Println("Extracted Token:", tokenString) // Debugging line
+
+		// Debugging: Decode the token before validation
+		claims := jwt.MapClaims{}
+		_, _, err := new(jwt.Parser).ParseUnverified(tokenString, &claims)
+		if err != nil {
+			fmt.Println("Error parsing token:", err)
+		} else {
+			fmt.Println("Decoded Token Claims:", claims)
+		}
+
+		// tokenStr := authHeader
+		// token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		// 		return nil, fmt.Errorf("unexpected signing method")
+		// 	}
+		// 	return jwtSecret, nil
+		// })
+		// Proceed with actual token validation
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
 		})
 
-		if err != nil || !token.Valid {
+		// if err != nil || !token.Valid {
+		// 	fmt.Println("Token Validation Error:", err) // Debugging line
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		// 	c.Abort()
+		// 	return
+		// }
+
+		if err != nil {
+			fmt.Println("Token Validation Error:", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
+		// claims, ok := token.Claims.(jwt.MapClaims)
+		// if !ok {
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+		// 	c.Abort()
+		// 	return
+		// }
+
+		// Extract user ID from token claims
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			userID := int(claims["user_id"].(float64)) // Ensure the claim exists
+			c.Set("user_id", userID)
+		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
@@ -487,6 +556,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 func createReservation(c *gin.Context) {
 	var reservation Reservation
 	if err := c.ShouldBindJSON(&reservation); err != nil {
@@ -502,11 +572,48 @@ func createReservation(c *gin.Context) {
 	}
 	reservation.UserID = userIDInterface.(int)
 
+	// 🔹 Step 1: Check if guest exists
+	var existingGuest Guest
+	err := db.QueryRow("SELECT guest_id FROM Guests WHERE guest_id = ?", reservation.GuestID).Scan(&existingGuest.GuestID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Guest does not exist, create a new one
+			fmt.Println("Guest not found. Creating new guest...")
+
+			newGuest := Guest{
+				FirstName: reservation.FirstName,
+				LastName:  reservation.LastName,
+				Email:     reservation.Email,
+				Phone:     GenerateRandomPhoneNumber(),
+				UserID:    reservation.UserID,
+			}
+
+			result, err := db.Exec(`
+				INSERT INTO Guests (first_name, last_name, email, phone, user_id) 
+				VALUES (?, ?, ?, ?, ?)`,
+				newGuest.FirstName, newGuest.LastName, newGuest.Email, newGuest.Phone, newGuest.UserID,
+			)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating guest", "details": err.Error()})
+				return
+			}
+
+			// Retrieve the new guest_id
+			guestID, _ := result.LastInsertId()
+			reservation.GuestID = int(guestID)
+		} else {
+			// Some other error occurred
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error", "details": err.Error()})
+			return
+		}
+	}
+
+	// 🔹 Step 2: Insert the reservation
 	result, err := db.Exec(`
-		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price, user_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
-		reservation.CheckOutDate, reservation.Status, reservation.TotalPrice, reservation.UserID,
+		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price)
+    	VALUES (?, ?, ?, ?, ?, ?)`,
+    reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
+    reservation.CheckOutDate, reservation.Status, reservation.TotalPrice,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating reservation", "details": err.Error()})

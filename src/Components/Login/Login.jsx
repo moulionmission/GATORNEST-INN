@@ -1,26 +1,32 @@
 import { useState } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = ({ onToggle }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate(); // Initialize the navigate function
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Logging in with:', { email, password });
-    // Handle login logic here
+    setError(''); // Clear any previous error
 
-    if(email == 'tarund2302@gmail.com'){
-      console.log('Email is right');
-      localStorage.setItem('userEmail', email); // Store email in localStorage (optional)
+    try {
+      const response = await axios.post('http://localhost:3000/login', {
+        email,
+        password
+      });
+
+      console.log('Login successful:', response.data);
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('token', response.data.token); // Store JWT token
       navigate('/home'); // Redirect to homepage
+    } catch (error) {
+      console.error('Login failed:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
     }
-    else {
-      console.log('Wrong email');
-    }
-
   };
 
   return (
