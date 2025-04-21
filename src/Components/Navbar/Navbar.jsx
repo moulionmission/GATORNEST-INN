@@ -1,72 +1,82 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react';
 import './navbar.css';
 import { FaHotel } from "react-icons/fa6";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { TbGridDots } from "react-icons/tb";
+import { Link } from 'react-router-dom'; // ✅ React Router Link
 
 const Navbar = () => {
-  const [active,setActive] = useState('navBar')
-  
+  const [active, setActive] = useState('navBar');
+
   const showNav = () => {
-    setActive('navBar activeNavbar')
-  }
+    setActive('navBar activeNavbar');
+  };
 
   const removeNavbar = () => {
-    setActive('navBar')
-  }
+    setActive('navBar');
+  };
 
   return (
     <section className='navBarSection'>
       <header className='header flex'>
-
         <div className='logoDiv'>
-          <a href="#" className='logo flex'>
-            <h1> <FaHotel className='icon'/> GatorNest - INN</h1>
-          </a>
+          <Link to="/" className='logo flex'>
+            <h1><FaHotel className='icon' /> GatorNest - INN</h1>
+          </Link>
         </div>
 
         <div className={active}>
           <ul className="navLists flex">
-
             <li className="navItem">
-              <a href="#" className="navLink">Home</a>
+              <Link to="/" className="navLink">Home</Link>
             </li>
 
             <li className="navItem">
-              <a href="#" className="navLink">Staff</a>
+              <Link to="/staff" className="navLink">Staff</Link> {/* ✅ Routed to AdminScheduler */}
             </li>
 
             <li className="navItem">
-              <a href="https://dineoncampus.com/UF/transact-mobile-ordering" className="navLink">Order</a>
+              <a
+                href="https://dineoncampus.com/UF/transact-mobile-ordering"
+                className="navLink"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Order
+              </a>
             </li>
 
             <li className="navItem">
-              <a href="https://union.ufl.edu/hotel/" className="navLink">About</a>
+              <a
+                href="https://union.ufl.edu/hotel/"
+                className="navLink"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                About
+              </a>
             </li>
 
-            
-
             <li className="navItem">
-              <a href="#" className="navLink">News</a>
+              <Link to="/news" className="navLink">News</Link> {/* Optional route */}
             </li>
 
             <button className='btn'>
-              <a href="#">AVATAR....</a>
+              <Link to="/profile">AVATAR....</Link> {/* Example Avatar/Profile */}
             </button>
           </ul>
 
-            <div onClick={removeNavbar} className='closeNavbar'>
+          <div onClick={removeNavbar} className='closeNavbar'>
             <AiFillCloseCircle />
-            </div>
-
+          </div>
         </div>
 
         <div onClick={showNav} className="togglerNavbar">
-        <TbGridDots className='icon'/>
+          <TbGridDots className='icon' />
         </div>
       </header>
     </section>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

@@ -12,107 +12,101 @@ import img8 from '../../Assets/image8.jpg';
 import img9 from '../../Assets/image9.jpg';
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { HiOutlineClipboardCheck } from "react-icons/hi";
-
-
-
 import Aos from 'aos';
 import 'aos/dist/aos.css';
 
-
 const Data = [
-  {
-    id: 1,
-    imgSrc: img1,
-    roomTitle: "Deluxe Suite",
-    location: "First Floor",
-    grade: "Luxury",
-    fee: 250,
-    description: "A spacious suite featuring modern amenities and a panoramic city view."
-  },
-  {
-    id: 2,
-    imgSrc: img2,
-    roomTitle: "Executive Room",
-    location: "Second Floor",
-    grade: "Premium",
-    fee: 180,
-    description: "A well-appointed room ideal for business travelers with high-speed WiFi."
-  },
-  {
-    id: 3,
-    imgSrc: img3,
-    roomTitle: "Standard Room",
-    location: "Third Floor",
-    grade: "Standard",
-    fee: 120,
-    description: "A comfortable room with all the basic amenities for a pleasant stay."
-  },
-  {
-    id: 4,
-    imgSrc: img8,
-    roomTitle: "Family Room",
-    location: "Ground Floor",
-    grade: "Family",
-    fee: 200,
-    description: "A large room perfect for families, offering extra space and kid-friendly facilities."
-  },
-  {
-    id: 5,
-    imgSrc: img5,
-    roomTitle: "Single Room",
-    location: "Fourth Floor",
-    grade: "Economy",
-    fee: 90,
-    description: "An economical option ideal for solo travelers with all essential amenities."
-  },
-  {
-    id: 6,
-    imgSrc: img6,
-    roomTitle: "King Suite",
-    location: "Fifth Floor",
-    grade: "Luxury",
-    fee: 300,
-    description: "An opulent suite featuring a king-size bed, luxury bath, and a private balcony."
-  },
-  {
-    id: 7,
-    imgSrc: img7,
-    roomTitle: "Junior Suite",
-    location: "Second Floor",
-    grade: "Premium",
-    fee: 210,
-    description: "A modern suite offering extra living space and contemporary design."
-  },
-  {
-    id: 8,
-    imgSrc: img4,
-    roomTitle: "VIP Room",
-    location: "Penthouse",
-    grade: "Exclusive",
-    fee: 450,
-    description: "An exclusive room with premium services, a private lounge, and stunning views."
-  },
-  {
-    id: 9,
-    imgSrc: img9,
-    roomTitle: "Budget Room",
-    location: "Third Floor",
-    grade: "Economy",
-    fee: 75,
-    description: "A cost-effective room with essential comforts and a cozy ambiance."
-  },
-  
+    {
+        id: 1,
+        imgSrc: img1,
+        roomTitle: "Deluxe Suite",
+        location: "First Floor",
+        grade: "Luxury",
+        fee: 250,
+        description: "A spacious suite featuring modern amenities and a panoramic city view."
+    },
+    {
+        id: 2,
+        imgSrc: img2,
+        roomTitle: "Executive Room",
+        location: "Second Floor",
+        grade: "Premium",
+        fee: 180,
+        description: "A well-appointed room ideal for business travelers with high-speed WiFi."
+    },
+    {
+        id: 3,
+        imgSrc: img3,
+        roomTitle: "Standard Room",
+        location: "Third Floor",
+        grade: "Standard",
+        fee: 120,
+        description: "A comfortable room with all the basic amenities for a pleasant stay."
+    },
+    {
+        id: 4,
+        imgSrc: img8,
+        roomTitle: "Family Room",
+        location: "Ground Floor",
+        grade: "Family",
+        fee: 200,
+        description: "A large room perfect for families, offering extra space and kid-friendly facilities."
+    },
+    {
+        id: 5,
+        imgSrc: img5,
+        roomTitle: "Single Room",
+        location: "Fourth Floor",
+        grade: "Economy",
+        fee: 90,
+        description: "An economical option ideal for solo travelers with all essential amenities."
+    },
+    {
+        id: 6,
+        imgSrc: img6,
+        roomTitle: "King Suite",
+        location: "Fifth Floor",
+        grade: "Luxury",
+        fee: 300,
+        description: "An opulent suite featuring a king-size bed, luxury bath, and a private balcony."
+    },
+    {
+        id: 7,
+        imgSrc: img7,
+        roomTitle: "Junior Suite",
+        location: "Second Floor",
+        grade: "Premium",
+        fee: 210,
+        description: "A modern suite offering extra living space and contemporary design."
+    },
+    {
+        id: 8,
+        imgSrc: img4,
+        roomTitle: "VIP Room",
+        location: "Penthouse",
+        grade: "Exclusive",
+        fee: 450,
+        description: "An exclusive room with premium services, a private lounge, and stunning views."
+    },
+    {
+        id: 9,
+        imgSrc: img9,
+        roomTitle: "Budget Room",
+        location: "Third Floor",
+        grade: "Economy",
+        fee: 75,
+        description: "A cost-effective room with essential comforts and a cozy ambiance."
+    },
+
 ];
-
-
 
 const Main = () => {
 
 
 
-  useEffect(() => {
-      Aos.init({duration: 2000})
-    }, [])
+    useEffect(() => {
+        Aos.init({ duration: 2000 });
+    }, []);
 
   // States for modal, room selection, dates, and fee calculation
   const [showModal, setShowModal] = useState(false);
@@ -125,47 +119,47 @@ const Main = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
 
-  // Function to calculate total fee based on days selected
-  const calculateFee = (start, end, feePerNight) => {
-    const startDay = new Date(start);
-    const endDay = new Date(end);
-    const diffTime = endDay - startDay;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) {
-      setTotalFee(diffDays * feePerNight);
-    } else {
-      setTotalFee(0);
-    }
-  };
+    // Function to calculate total fee based on days selected
+    const calculateFee = (start, end, feePerNight) => {
+        const startDay = new Date(start);
+        const endDay = new Date(end);
+        const diffTime = endDay - startDay;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+            setTotalFee(diffDays * feePerNight);
+        } else {
+            setTotalFee(0);
+        }
+    };
 
-  // Trigger modal on BOOK click and set the room fee and title
-  const handleBookClick = (fee, title) => {
-    setSelectedRoomFee(fee);
-    setSelectedRoomTitle(title);
-    setShowModal(true);
-    // Reset dates and fee
-    setStartDate('');
-    setEndDate('');
-    setTotalFee(0);
-  };
+    // Trigger modal on BOOK click and set the room fee and title
+    const handleBookClick = (fee, title) => {
+        setSelectedRoomFee(fee);
+        setSelectedRoomTitle(title);
+        setShowModal(true);
+        // Reset dates and fee
+        setStartDate('');
+        setEndDate('');
+        setTotalFee(0);
+    };
 
-  // Handle start date change and recalculate fee if possible
-  const handleStartDateChange = (e) => {
-    const newStartDate = e.target.value;
-    setStartDate(newStartDate);
-    if (endDate) {
-      calculateFee(newStartDate, endDate, selectedRoomFee);
-    }
-  };
+    // Handle start date change and recalculate fee if possible
+    const handleStartDateChange = (e) => {
+        const newStartDate = e.target.value;
+        setStartDate(newStartDate);
+        if (endDate) {
+            calculateFee(newStartDate, endDate, selectedRoomFee);
+        }
+    };
 
-  // Handle end date change and recalculate fee if possible
-  const handleEndDateChange = (e) => {
-    const newEndDate = e.target.value;
-    setEndDate(newEndDate);
-    if (startDate) {
-      calculateFee(startDate, newEndDate, selectedRoomFee);
-    }
-  };
+    // Handle end date change and recalculate fee if possible
+    const handleEndDateChange = (e) => {
+        const newEndDate = e.target.value;
+        setEndDate(newEndDate);
+        if (startDate) {
+            calculateFee(startDate, newEndDate, selectedRoomFee);
+        }
+    };
 
   // Function to handle booking confirmation
   const handleBookingConfirm = () => {
@@ -213,54 +207,54 @@ const Main = () => {
       alert('Failed to create reservation');
   });
 
-    // Close the modal after logging
-    setShowModal(false);
-};
+        // Close the modal after logging
+        setShowModal(false);
+    };
 
 
   
    
 
-  return (
-    <section className='main container section'>
+    return (
+        <section className='main container section'>
 
-      <div className="secTitle">
-        <h3 data-aos="fade-right" className='title'>
-          Popular Rooms
-        </h3>
-      </div>
+            <div className="secTitle">
+                <h3 data-aos="fade-right" className='title'>
+                    Popular Rooms
+                </h3>
+            </div>
 
-      <div className="secContent grid">
+            <div className="secContent grid">
 
-      
-        {
-          Data.map(({id, imgSrc, roomTitle, location, grade, fee, description}) => {
-            return(
-              <div key={id} data-aos="fade-up" className="singleRoom">
-              
-                <div className="imageDiv">
-                  <img src={imgSrc} alt={roomTitle}/>
-                </div>
 
-                <div className="cardInfo">
-                  <h4 className="roomTitle">{roomTitle}</h4>
-                  <span className='continent flex'>
-                  <HiOutlineLocationMarker className='icon'/>
-                  <span className="name">{location}</span>
-                  </span>
+                {
+                    Data.map(({ id, imgSrc, roomTitle, location, grade, fee, description }) => {
+                        return (
+                            <div key={id} data-aos="fade-up" className="singleRoom">
 
-                  <div className="fee flex">
-                    <div className="grade">
-                      <span>{grade}</span>
-                    </div>
-                    <div className="price">
-                      <h5>{'$' + fee}</h5>
-                    </div>
-                  </div>
+                                <div className="imageDiv">
+                                    <img src={imgSrc} alt={roomTitle} />
+                                </div>
 
-                  <div className="desc">
-                    <p>{description}</p>
-                  </div>
+                                <div className="cardInfo">
+                                    <h4 className="roomTitle">{roomTitle}</h4>
+                                    <span className='continent flex'>
+                                        <HiOutlineLocationMarker className='icon' />
+                                        <span className="name">{location}</span>
+                                    </span>
+
+                                    <div className="fee flex">
+                                        <div className="grade">
+                                            <span>{grade}</span>
+                                        </div>
+                                        <div className="price">
+                                            <h5>{'$' + fee}</h5>
+                                        </div>
+                                    </div>
+
+                                    <div className="desc">
+                                        <p>{description}</p>
+                                    </div>
 
                   <button className='btn flex' onClick={() => handleBookClick(fee, roomTitle)} >
                     BOOK <HiOutlineClipboardCheck className='icon'/>
