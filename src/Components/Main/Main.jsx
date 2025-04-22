@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React,{useEffect, useState} from 'react';
 import './main.css';
 import axios from 'axios';
 import img1 from '../../Assets/image1.jpg';
@@ -102,23 +102,22 @@ const Data = [
 
 const Main = () => {
 
+
+
     useEffect(() => {
         Aos.init({ duration: 2000 });
     }, []);
 
-    // States for modal, room selection, dates, and fee calculation
-    const [showModal, setShowModal] = useState(false);
-    const [selectedRoomFee, setSelectedRoomFee] = useState(0);
-    const [selectedRoomTitle, setSelectedRoomTitle] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [totalFee, setTotalFee] = useState(0);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [availableRoomType, setAvailableRoomType] = useState([]);
-    const [availableRooms, setAvailableRooms] = useState([]);
-    const [clickedRoomPosition, setClickedRoomPosition] = useState(null);
+  // States for modal, room selection, dates, and fee calculation
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRoomFee, setSelectedRoomFee] = useState(0);
+  const [selectedRoomTitle, setSelectedRoomTitle] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [totalFee, setTotalFee] = useState(0);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
 
     // Function to calculate total fee based on days selected
     const calculateFee = (start, end, feePerNight) => {
@@ -162,69 +161,59 @@ const Main = () => {
         }
     };
 
-    // Function to handle booking confirmation
-    const handleBookingConfirm = () => {
-        console.log("Booking confirmed!", {
-            name,
-            email,
-            selectedRoomTitle,
-            startDate,
-            endDate,
-            totalFee
-        });
+  // Function to handle booking confirmation
+  const handleBookingConfirm = () => {
+    /*console.log("Booking confirmed!", { 
+        name, 
+        email, 
+        selectedRoomTitle, 
+        startDate, 
+        endDate, 
+        totalFee 
+    });*/
+
+    // Prepare the reservation data to be sent to the backend
+    const reservationData = {
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      guest_id: 1,  
+      room_id: 3, 
+      check_in_date: startDate,
+      check_out_date: endDate,
+      status: "Pending",
+      total_price: totalFee
+    };
+
+  console.log(reservationData)
+  console.log('user token:', localStorage.getItem('token'))
+
+  axios.post('http://localhost:3000/reservations', reservationData, {
+      headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT token for auth
+            
+          'Content-Type': 'application/json'
+      }
+  })
+  .then(response => {
+      console.log('Reservation created successfully:', response.data);
+      // Handle success, e.g., show a success message, redirect, etc.
+      alert('Reservation successful!');
+      setShowModal(false); // Close modal
+  })
+  .catch(error => {
+      console.error('Error creating reservation:', error);
+      // Handle error, e.g., show an error message
+      alert('Failed to create reservation');
+  });
 
         // Close the modal after logging
         setShowModal(false);
     };
 
 
-    const fetchAvailableRooms = async (roomTitle, event) => {
-        try {
-            let roomType = "";
-            if (roomTitle.toLowerCase().includes("single")) {
-                roomType = "Single";
-            } else if (roomTitle.toLowerCase().includes("executive")) {
-                roomType = "Executive";
-            }
-            else if (roomTitle.toLowerCase().includes("standard")) {
-                roomType = "Standard";
-            }
-             else if (roomTitle.toLowerCase().includes("family")) {
-                roomType = "Family";
-            }
-             else if (roomTitle.toLowerCase().includes("king")) {
-                roomType = "King";
-            }
-             else if (roomTitle.toLowerCase().includes("junior")) {
-                roomType = "Junior";
-            }
-            else if (roomTitle.toLowerCase().includes("vip")) {
-                roomType = "VIP";
-            }
-            else if (roomTitle.toLowerCase().includes("budget")) {
-                roomType = "Budget";
-            }
-            else if (roomTitle.toLowerCase().includes("suite")) {
-                roomType = "Suite";
-            }
-             else if (roomTitle.toLowerCase().includes("deluxe")) {
-                roomType = "Deluxe";
-            }
-
-            const response = await axios.get(`http://localhost:3000/rooms/${roomType}`);
-            setAvailableRooms(response.data);
-            setAvailableRoomType(roomType); // Set the type of available rooms
-
-            // Capture the position of the clicked room
-            const rect = event.target.closest('.singleRoom').getBoundingClientRect();
-            setClickedRoomPosition(rect);
-            setSelectedRoom(roomTitle); // Store selected room's info
-        }
-        catch (error) {
-            console.error("Error fetching available rooms:", error);
-            setAvailableRooms([]); // Reset on error
-        }
-    };
+  
+   
 
     return (
         <section className='main container section'>
@@ -267,101 +256,95 @@ const Main = () => {
                                         <p>{description}</p>
                                     </div>
 
-                                    <div className="button-group">
-                                        <button className='btn flex' onClick={() => handleBookClick(fee, roomTitle)}>
-                                            BOOK <HiOutlineClipboardCheck className='icon' />
-                                        </button>
-                                        {/* <button className='btn flex' onClick={(event) => fetchAvailableRooms(roomTitle, event)}>
-                                            DETAILS <HiOutlineClipboardCheck className='icon' />
-                                        </button> */}
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    })
-                }
+                  <button className='btn flex' onClick={() => handleBookClick(fee, roomTitle)} >
+                    BOOK <HiOutlineClipboardCheck className='icon'/>
+
+                  </button>
+                </div>
+              </div>
+            )
+          })
+        }
+      </div>
+
+      {/* Modal Popup Section */}
+      {showModal && (
+        <div className="modalOverlay">
+          <div className="modalContent" data-aos="fade-up">
+            <h3>Booking Form</h3>
+            {/* Display the room type and one day price */}
+            <div className="roomDetails">
+              <p><strong>Room Type:</strong> {selectedRoomTitle}</p>
+              <p><strong>One Day Price:</strong> ${selectedRoomFee}</p>
             </div>
+            <form>
+              <div className="formGroup">
+                <label>First Name:</label>
+                <input 
+                  type="text" 
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Enter your name"
+                  required 
+                />
+              </div>
+              <div className="formGroup">
+                <label>Last Name:</label>
+                <input 
+                  type="text" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Enter your name"
+                  required 
+                />
+              </div>
 
-            {/* Modal Popup Section */}
-            {showModal && (
-                <div className="modalOverlay">
-                    <div className="modalContent" data-aos="fade-up">
-                        <h3>Booking Form</h3>
-                        {/* Display the room type and one day price */}
-                        <div className="roomDetails">
-                            <p><strong>Room Type:</strong> {selectedRoomTitle}</p>
-                            <p><strong>One Day Price:</strong> ${selectedRoomFee}</p>
-                        </div>
-                        <form>
-                            <div className="formGroup">
-                                <label>Name:</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Enter your name"
-                                    required
-                                />
-                            </div>
+              <div className="formGroup">
+                <label>Email:</label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required 
+                />
+              </div>
+              <div className="formGroup">
+                <label>From Date:</label>
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                />
+              </div>
+              <div className="formGroup">
+                <label>To Date:</label>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={handleEndDateChange}
+                />
+              </div>
+              <div className="formGroup">
+                <p><strong>Total Fee:</strong> ${totalFee}</p>
+              </div>
+              <button 
+                type="button" 
+                className="btn1"
+                onClick={handleBookingConfirm}
+              >
+                BOOK NOW AND PAY AT THE HOTEL
+              </button>
+            </form>
+            <button className="closeBtn" onClick={() => setShowModal(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
-                            <div className="formGroup">
-                                <label>Email:</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
-                                    required
-                                />
-                            </div>
-                            <div className="formGroup">
-                                <label>From Date:</label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={handleStartDateChange}
-                                />
-                            </div>
-                            <div className="formGroup">
-                                <label>To Date:</label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={handleEndDateChange}
-                                />
-                            </div>
-                            <div className="formGroup">
-                                <p><strong>Total Fee:</strong> ${totalFee}</p>
-                            </div>
-                            <button
-                                type="button"
-                                className="btn1"
-                                onClick={handleBookingConfirm}
-                            >
-                                BOOK NOW AND PAY AT THE HOTEL
-                            </button>
-                        </form>
-                        <button className="closeBtn" onClick={() => setShowModal(false)}>
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
-            {/* Display available rooms */}
-            {availableRooms.length > 0 && (
-                <div className="availableRooms">
-                    <h3>Available {availableRoomType} Rooms</h3>
-                    <ul>
-                        {availableRooms.map((room, index) => (
-                            <li key={index}>
-                                Room {room.room_number} - ${room.price_per_night} - {room.status}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </section>
-    )
+    </section>
+  )
 }
 
 export default Main

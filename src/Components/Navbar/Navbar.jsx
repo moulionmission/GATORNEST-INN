@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext  } from 'react';
 import './navbar.css';
 import { FaHotel } from "react-icons/fa6";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { TbGridDots } from "react-icons/tb";
-import { Link } from 'react-router-dom'; // ✅ React Router Link
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../../AuthContext';
 
 const Navbar = () => {
   const [active, setActive] = useState('navBar');
+  // const [isStaff, setIsStaff] = useState(false);
+
+  // useEffect(() => {
+  //   const staffFlag = localStorage.getItem('isStaff');
+  //   setIsStaff(staffFlag === 'true'); 
+  // }, []);
+
+  const { isStaff } = useContext(AuthContext);
 
   const showNav = () => {
     setActive('navBar activeNavbar');
@@ -31,9 +40,17 @@ const Navbar = () => {
               <Link to="/" className="navLink">Home</Link>
             </li>
 
-            <li className="navItem">
-              <Link to="/staff" className="navLink">Staff</Link> {/* ✅ Routed to AdminScheduler */}
-            </li>
+            {/* {isStaff && (
+              <li className="navItem">
+                <Link to="/staff" className="navLink">Staff</Link>
+              </li>
+            )} */}
+
+            {isStaff && (
+              <li className="navItem">
+                <Link to="/staff" className="navLink">Staff</Link>
+              </li>
+            )}
 
             <li className="navItem">
               <a

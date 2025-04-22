@@ -1,19 +1,40 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Register = ({ onToggle }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    
+    const [success, setSuccess] = useState('');
+    const navigate = useNavigate(); // Initialize the navigate function
   
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
+      setError('');
+      setSuccess('');
+  
       if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        setError('Passwords do not match');
         return;
       }
-      console.log('Registering with:', { email, password });
-      // Handle registration logic here
+  
+      try {
+        const response = await axios.post('http://localhost:3000/register', {
+          email,
+          password
+        });
+  
+        console.log('Registration successful:', response.data);
+        setSuccess('Registration successful! You can now log in.');
+      } catch (error) {
+        console.error('Registration failed:', error.response?.data || error.message);
+        setError(error.response?.data?.message || 'Registration failed. Please try again.');
+      }
     };
+  
   
     return (
       <div className="auth-container">

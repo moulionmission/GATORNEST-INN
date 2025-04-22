@@ -50,10 +50,11 @@ const App = () => {
           <>
             <Home />
             <Main />
+            <Footer/>
           </>
         } />
 
-        <Route path="/staff" element={<AdminScheduler />} /> {/* ✅ Staff scheduler route */}
+        <Route path="/staff" element={<AdminScheduler />} />
       </Routes>
       <Footer />
     </Router>

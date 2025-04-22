@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './AdminScheduler.css';
 
 const roomTypes = [
@@ -7,7 +8,7 @@ const roomTypes = [
 ];
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const staffOptions = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona', 'George', 'Hannah'];
+//const staffOptions = ['Alice', 'Bob', 'Charlie', 'Diana', 'Ethan', 'Fiona', 'George', 'Hannah'];
 const timeSlots = ['Morning', 'Afternoon', 'Night'];
 
 const StaffScheduler = () => {
@@ -19,6 +20,78 @@ const StaffScheduler = () => {
   const [selectedSlot, setSelectedSlot] = useState('Morning');
   const [schedule, setSchedule] = useState({});
   const [editing, setEditing] = useState({});
+  const [staffOptions, setStaffOptions] = useState([]);
+  const [reverseStaffMap, setReverseStaffMap] = useState({});
+
+  useEffect(() => {
+    const fetchSchedulesAndStaff = async () => {
+      try {
+        const [staffRes, scheduleRes] = await Promise.all([
+          axios.get("http://localhost:3000/staffs", {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT token for auth
+                
+              'Content-Type': 'application/json'
+          }
+          }),
+          axios.get("http://localhost:3000/schedules", {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT token for auth
+                
+              'Content-Type': 'application/json'
+            }
+          })
+        ]);
+
+        const staffList = staffRes.data;
+        const scheduleList = scheduleRes.data;
+        setStaffOptions(staffList.map(staff => staff.first_name));
+
+        // Create map: staff_id -> first_name
+        const staffMap = {};
+        staffList.forEach(staff => {
+          staffMap[staff.staff_id] = staff.first_name;
+        });
+
+        const reverseStaffMap = {};
+        staffList.forEach(staff => {
+          reverseStaffMap[staff.first_name] = staff.staff_id;
+        });
+        setReverseStaffMap(reverseStaffMap);
+
+
+        console.log(staffMap);
+        console.log(scheduleList);
+
+        // Organize schedule by weekday
+        const parsedSchedule = {};
+
+        (scheduleList || []).forEach(entry => {
+          const { staff_id, shift_date, shift_time } = entry;
+
+          const dayOfWeek = shift_date;
+
+
+          const name = staffMap[staff_id] || `Staff ${staff_id}`;
+          if (!parsedSchedule[dayOfWeek]) parsedSchedule[dayOfWeek] = [];
+          parsedSchedule[dayOfWeek].push({ name, slot: shift_time });
+
+          console.log('Parsed:', { shift_date, dayOfWeek, name, slot: shift_time });
+          console.log('Staff Name:', staffMap[staff_id]);
+
+        });
+
+        setSchedule(parsedSchedule);
+        console.log("Final schedule state:", schedule);
+
+      } catch (err) {
+        console.error("Error fetching schedules or staff:", err);
+      }
+    };
+
+    fetchSchedulesAndStaff();
+  }, []);
+
 
   const handleRoomSave = (e) => {
     e.preventDefault();
@@ -53,29 +126,96 @@ const StaffScheduler = () => {
     });
   };
 
-  const saveEditedEntry = () => {
+  const saveEditedEntry = async () => {
     const { day, index, name, slot } = editing;
-    setSchedule(prev => {
-      const updated = [...prev[day]];
-      updated[index] = { name, slot };
-      return { ...prev, [day]: updated };
+    const staff_id = reverseStaffMap[name];
+
+    try {
+      await axios.put(`http://localhost:3000/schedule/${staff_id}`, null, {
+        params: {
+          shift_date: day,
+          new_shift_time: slot
+        },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setSchedule(prev => {
+        const updated = [...prev[day]];
+        updated[index] = { name, slot };
+        return { ...prev, [day]: updated };
     });
+
     setEditing({});
-  };
-
-  const deleteEntry = (day, index) => {
-    setSchedule(prev => {
-      const updated = [...prev[day]];
-      updated.splice(index, 1);
-      return { ...prev, [day]: updated };
-    });
-
-    if (editing.day === day && editing.index === index) {
-      setEditing({});
+    } catch (err) {
+      console.error("Failed to update schedule:", err);
+      alert("Failed to update schedule on server.");
     }
   };
 
+  const deleteEntry = async (day, index) => {
+    const entry = schedule[day][index];
+    const staff_id = reverseStaffMap[entry.name];
+  
+    try {
+      await axios.delete(`http://localhost:3000/schedule/${staff_id}`, {
+        params: {
+          shift_date: day,
+          shift_time: entry.slot,
+        },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+  
+      // Only update frontend state after successful deletion
+      setSchedule(prev => {
+        const updated = [...prev[day]];
+        updated.splice(index, 1);
+        return { ...prev, [day]: updated };
+      });
+  
+      if (editing.day === day && editing.index === index) {
+        setEditing({});
+      }
+    } catch (err) {
+      console.error("Failed to delete schedule:", err);
+      alert("Failed to delete schedule from the server.");
+    }
+  };
+
+  const assignStaff = async (day, slot, staffName) => {
+    const staff_id = reverseStaffMap[staffName];
+  
+    try {
+      const res = await axios.post("http://localhost:3000/schedule", {
+        staff_id,
+        shift_date: day,
+        shift_time: slot,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+  
+      // Update local state
+      setSchedule(prev => ({
+        ...prev,
+        [day]: [...(prev[day] || []), { name: staffName, slot }]
+      }));
+  
+      //alert("Staff assigned successfully!");
+    } catch (err) {
+      console.error("Failed to assign staff:", err);
+      alert("Failed to assign staff to schedule.");
+    }
+  };
+  
+
   const today = new Date().toLocaleString('en-US', { weekday: 'long' });
+  console.log('day today:', today);
   const todayStaff = schedule[today] || [];
 
   return (
@@ -121,7 +261,7 @@ const StaffScheduler = () => {
 
       {/* Staff Scheduling Form */}
       <form className="schedulerForm" onSubmit={handleAssign}>
-        <h3>Assign Staff</h3>
+        <h3>Assign Housekeeping Staff</h3>
         <div className="formGroup">
           <label>Select Day</label>
           <select value={selectedDay} onChange={e => setSelectedDay(e.target.value)}>
@@ -153,7 +293,12 @@ const StaffScheduler = () => {
           </select>
         </div>
 
-        <button type="submit" className="assignBtn">Assign Staff</button>
+        {/* <button type="submit" className="assignBtn">Assign Staff</button> */}
+        <button 
+          type="button"
+          onClick={() => selectedStaff.forEach(name => assignStaff(selectedDay, selectedSlot, name))}
+          className="assignBtn">Assign Staff
+        </button>
       </form>
 
       {/* Weekly Schedule */}
@@ -207,7 +352,6 @@ const StaffScheduler = () => {
         ))}
       </div>
 
-      {/* Today */}
       <div className="todaySection">
         <h3>Who's Working Today ({today})</h3>
         {todayStaff.length > 0 ? (

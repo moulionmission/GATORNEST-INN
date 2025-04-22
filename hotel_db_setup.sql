@@ -93,6 +93,8 @@ CREATE TABLE Staff_Schedule (
     staff_id INT NOT NULL,
     shift_date VARCHAR(50) NOT NULL,
     shift_time ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
+    shift_date VARCHAR(50) NOT NULL,
+    shift_time ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON DELETE CASCADE
 );
 
@@ -104,3 +106,14 @@ CREATE TABLE Staff (
     email VARCHAR(100) UNIQUE NOT NULL,
     role ENUM('Manager', 'Receptionist', 'Housekeeping', 'Security') NOT NULL
 );
+
+INSERT INTO Staff (first_name, last_name, email, role) VALUES
+('Alice', 'Smith', 'alice@gmail.com', 'Housekeeping'),
+('Bob', 'Johnson', 'bob@gmail.com', 'Receptionist'),
+('Charlie', 'Williams', 'charlie@gmail.com', 'Housekeeping'),
+('Diana', 'Brown', 'diana@gmail.com', 'Housekeeping'),
+('Ethan', 'Jones', 'ethan@gmail.com', 'Manager'),
+('Fiona', 'Garcia', 'fiona@gmail.com', 'Housekeeping'),
+('George', 'Miller', 'george@gmail.com', 'Housekeeping'),
+('Hannah', 'Davis', 'hannah@gmail.com', 'Security');
+

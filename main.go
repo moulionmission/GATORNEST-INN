@@ -9,8 +9,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"strings"
 	"time"
 
+	"math/rand"
+
+	"github.com/gin-contrib/cors"
 	"math/rand"
 
 	"github.com/gin-contrib/cors"
@@ -56,6 +60,8 @@ type Payment struct {
 type Reservation struct {
 	FirstName     string    `json:"first_name"`
 	LastName      string    `json:"last_name"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
 	ReservationID int       `json:"reservation_id"`
 	GuestID       int       `json:"guest_id"`
 	RoomID        int       `json:"room_id"`
@@ -65,6 +71,14 @@ type Reservation struct {
 	TotalPrice    float64   `json:"total_price"`
 	CreatedAt     time.Time `json:"created_at"`
 	UserID        int       `json:"user_id,omitempty"` // added for linking to logged-in user
+	Email         string    `json:"email"`
+}
+
+type Schedule struct {
+	ScheduleID int    `json:"schedule_id,omitempty"`
+	StaffID    int    `json:"staff_id"`
+	ShiftDate  string `json:"shift_date"` // "Monday", "Tuesday", etc.
+	ShiftTime  string `json:"shift_time"` // "Morning", "Afternoon", "Night"
 	Email         string    `json:"email"`
 }
 
@@ -111,6 +125,15 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+
+	// Apply CORS middleware (allowing requests from http://localhost:3001)
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3001"}, // React frontend's URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+
 	router.POST("/register", registerUser)
 	router.POST("/login", loginUser)
 
@@ -126,8 +149,10 @@ func main() {
 
 		auth.GET("/profile", getProfile)
 		auth.POST("/reservations", createReservation)
+
 		auth.GET("/staff/:id", getStaffByID)
-		auth.GET("/staff/housekeeping", getAllHousekeepingStaff)
+		auth.GET("/staffs", getAllStaff)
+
 		auth.POST("/schedule", addToSchedule)
 		auth.DELETE("/schedule/:id", removeFromSchedule)
 		auth.PUT("/schedule/:id", updateSchedule)
@@ -149,6 +174,19 @@ func main() {
 	}
 	log.Printf("Server running on port %s", port)
 	router.Run(":" + port)
+}
+
+// GenerateRandomPhoneNumber creates a random 10-digit phone number
+func GenerateRandomPhoneNumber() string {
+	rand.Seed(time.Now().UnixNano())
+
+	// Generate random digits
+	areaCode := rand.Intn(900) + 100 // Ensures a 3-digit number (100-999)
+	prefix := rand.Intn(900) + 100   // Ensures a 3-digit number (100-999)
+	lineNumber := rand.Intn(10000)   // Ensures a 4-digit number (0000-9999)
+
+	// Format as a phone number
+	return fmt.Sprintf("%d-%d-%04d", areaCode, prefix, lineNumber)
 }
 
 // GenerateRandomPhoneNumber creates a random 10-digit phone number
@@ -524,12 +562,49 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		fmt.Println("Received Authorization Header:", authHeader) // Debugging line
 
+		fmt.Println("Received Authorization Header:", authHeader) // Debugging line
+
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
 
+		// Extract token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		fmt.Println("Extracted Token:", tokenString) // Debugging line
+
+		// Debugging: Decode the token before validation
+		claims := jwt.MapClaims{}
+		_, _, err := new(jwt.Parser).ParseUnverified(tokenString, &claims)
+		if err != nil {
+			fmt.Println("Error parsing token:", err)
+		} else {
+			fmt.Println("Decoded Token Claims:", claims)
+		}
+
+		// tokenStr := authHeader
+		// token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		// 		return nil, fmt.Errorf("unexpected signing method")
+		// 	}
+		// 	return jwtSecret, nil
+		// })
+		// Proceed with actual token validation
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
+		})
+
+		// if err != nil || !token.Valid {
+		// 	fmt.Println("Token Validation Error:", err) // Debugging line
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		// 	c.Abort()
+		// 	return
+		// }
+
+		if err != nil {
+			fmt.Println("Token Validation Error:", err)
 		// Extract token
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
@@ -582,6 +657,18 @@ func AuthMiddleware() gin.HandlerFunc {
 			userID := int(claims["user_id"].(float64)) // Ensure the claim exists
 			c.Set("user_id", userID)
 		} else {
+		// claims, ok := token.Claims.(jwt.MapClaims)
+		// if !ok {
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+		// 	c.Abort()
+		// 	return
+		// }
+
+		// Extract user ID from token claims
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			userID := int(claims["user_id"].(float64)) // Ensure the claim exists
+			c.Set("user_id", userID)
+		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
@@ -594,6 +681,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 
 func createReservation(c *gin.Context) {
 	var reservation Reservation
@@ -647,10 +735,50 @@ func createReservation(c *gin.Context) {
 	}
 
 	// 🔹 Step 2: Insert the reservation
+	// 🔹 Step 1: Check if guest exists
+	var existingGuest Guest
+	err := db.QueryRow("SELECT guest_id FROM Guests WHERE guest_id = ?", reservation.GuestID).Scan(&existingGuest.GuestID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Guest does not exist, create a new one
+			fmt.Println("Guest not found. Creating new guest...")
+
+			newGuest := Guest{
+				FirstName: reservation.FirstName,
+				LastName:  reservation.LastName,
+				Email:     reservation.Email,
+				Phone:     GenerateRandomPhoneNumber(),
+				UserID:    reservation.UserID,
+			}
+
+			result, err := db.Exec(`
+				INSERT INTO Guests (first_name, last_name, email, phone, user_id) 
+				VALUES (?, ?, ?, ?, ?)`,
+				newGuest.FirstName, newGuest.LastName, newGuest.Email, newGuest.Phone, newGuest.UserID,
+			)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating guest", "details": err.Error()})
+				return
+			}
+
+			// Retrieve the new guest_id
+			guestID, _ := result.LastInsertId()
+			reservation.GuestID = int(guestID)
+		} else {
+			// Some other error occurred
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error", "details": err.Error()})
+			return
+		}
+	}
+
+	// 🔹 Step 2: Insert the reservation
 	result, err := db.Exec(`
 		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price)
     	VALUES (?, ?, ?, ?, ?, ?)`,
+		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price)
+    	VALUES (?, ?, ?, ?, ?, ?)`,
 		reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
+		reservation.CheckOutDate, reservation.Status, reservation.TotalPrice,
 		reservation.CheckOutDate, reservation.Status, reservation.TotalPrice,
 	)
 	if err != nil {
@@ -665,6 +793,36 @@ func createReservation(c *gin.Context) {
 }
 
 // Staff Endpoints
+
+func getAllStaff(c *gin.Context) {
+	rows, err := db.Query(`SELECT staff_id, first_name FROM Staff WHERE role='Housekeeping'`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve staff", "details": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var staffList []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var firstName string
+
+		if err := rows.Scan(&id, &firstName); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse staff", "details": err.Error()})
+			return
+		}
+
+		staffList = append(staffList, gin.H{
+			"staff_id":   id,
+			"first_name":  firstName,
+		})
+	}
+
+	c.JSON(http.StatusOK, staffList)
+}
+
+
+
 // GET /staff/:id - Get staff information by staff ID
 func getStaffByID(c *gin.Context) {
 	id := c.Param("id")
