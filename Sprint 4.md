@@ -404,6 +404,4 @@ We used GO Unit Testing to test each endpoint and verify actual results with exp
     }
     ```
 
-
-
 These unit tests ensure that each API endpoint is functioning correctly and returning the expected status codes.
