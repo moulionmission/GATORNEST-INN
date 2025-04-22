@@ -1,6 +1,6 @@
 Project Documentation - Sprint 4 Updates
 
-Demo Video: 
+Demo Video: https://drive.google.com/file/d/1EYXNnet02pYhrV-Vih9lPD5HEBTSYKe1/view?usp=sharing 
 ___FRONTEND___
 
 Sprint 4 centered on developing the admin panel functionality for GATOR NEST INN. The primary objective was to introduce advanced staff scheduling and room management capabilities so that hotel administrators could control operations effectively via a dynamic interface.
