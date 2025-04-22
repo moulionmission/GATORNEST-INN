@@ -8,8 +8,8 @@ By utilizing a scalable cloud infrastructure and a reliable MySQL database, Gato
 
 
 # Contributors
-Chandra Mouli Dasari
-Gurudeep Paleti
-Harsha Vardhan Reddy Palagiri
+Chandra Mouli Dasari,
+Gurudeep Paleti,
+Harsha Vardhan Reddy Palagiri,
 Tarunkrishna Dasari
 
