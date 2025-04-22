@@ -93,6 +93,8 @@ CREATE TABLE Staff_Schedule (
     staff_id INT NOT NULL,
     shift_date VARCHAR(50) NOT NULL,
     shift_time ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
+    shift_date VARCHAR(50) NOT NULL,
+    shift_time ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON DELETE CASCADE
 );
 
