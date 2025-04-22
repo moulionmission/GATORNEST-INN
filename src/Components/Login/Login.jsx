@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { AuthContext } from '../../AuthContext';
 
 const Login = ({ onToggle }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { setIsStaff } = useContext(AuthContext);
   const navigate = useNavigate(); // Initialize the navigate function
 
   const handleSubmit = async (e) => {
@@ -22,6 +24,16 @@ const Login = ({ onToggle }) => {
       console.log('Login successful:', response.data);
       localStorage.setItem('userEmail', email);
       localStorage.setItem('token', response.data.token); // Store JWT token
+      
+      var isStaff = false;
+      if(email == 'admin@gmail.com'){
+        isStaff = true;
+      }
+
+      localStorage.setItem('isStaff', isStaff);
+      setIsStaff(isStaff);
+
+
       navigate('/home'); // Redirect to homepage
     } catch (error) {
       console.error('Login failed:', error.response?.data || error.message);

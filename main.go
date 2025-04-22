@@ -8,18 +8,18 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 
 	"math/rand"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/gin-contrib/cors"
 )
 
 // Global DB variable
@@ -54,8 +54,8 @@ type Payment struct {
 }
 
 type Reservation struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
 	ReservationID int       `json:"reservation_id"`
 	GuestID       int       `json:"guest_id"`
 	RoomID        int       `json:"room_id"`
@@ -65,7 +65,14 @@ type Reservation struct {
 	TotalPrice    float64   `json:"total_price"`
 	CreatedAt     time.Time `json:"created_at"`
 	UserID        int       `json:"user_id,omitempty"` // added for linking to logged-in user
-	Email     string    `json:"email"`
+	Email         string    `json:"email"`
+}
+
+type Schedule struct {
+	ScheduleID int    `json:"schedule_id,omitempty"`
+	StaffID    int    `json:"staff_id"`
+	ShiftDate  string `json:"shift_date"` // "Monday", "Tuesday", etc.
+	ShiftTime  string `json:"shift_time"` // "Morning", "Afternoon", "Night"
 }
 
 // initDB loads environment variables and connects to the MySQL database.
@@ -104,8 +111,6 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-
-
 	router.POST("/register", registerUser)
 	router.POST("/login", loginUser)
 
@@ -121,6 +126,14 @@ func main() {
 
 		auth.GET("/profile", getProfile)
 		auth.POST("/reservations", createReservation)
+
+		auth.GET("/staff/:id", getStaffByID)
+		auth.GET("/staffs", getAllStaff)
+
+		auth.POST("/schedule", addToSchedule)
+		auth.DELETE("/schedule/:id", removeFromSchedule)
+		auth.PUT("/schedule/:id", updateSchedule)
+		auth.GET("/schedules", getAllSchedules)
 
 	}
 
@@ -612,8 +625,8 @@ func createReservation(c *gin.Context) {
 	result, err := db.Exec(`
 		INSERT INTO Reservations (guest_id, room_id, check_in_date, check_out_date, status, total_price)
     	VALUES (?, ?, ?, ?, ?, ?)`,
-    reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
-    reservation.CheckOutDate, reservation.Status, reservation.TotalPrice,
+		reservation.GuestID, reservation.RoomID, reservation.CheckInDate,
+		reservation.CheckOutDate, reservation.Status, reservation.TotalPrice,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating reservation", "details": err.Error()})
@@ -624,4 +637,189 @@ func createReservation(c *gin.Context) {
 	reservation.ReservationID = int(id)
 
 	c.JSON(http.StatusCreated, reservation)
+}
+
+// Staff Endpoints
+
+func getAllStaff(c *gin.Context) {
+	rows, err := db.Query(`SELECT staff_id, first_name FROM Staff WHERE role='Housekeeping'`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve staff", "details": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var staffList []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var firstName string
+
+		if err := rows.Scan(&id, &firstName); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse staff", "details": err.Error()})
+			return
+		}
+
+		staffList = append(staffList, gin.H{
+			"staff_id":   id,
+			"first_name":  firstName,
+		})
+	}
+
+	c.JSON(http.StatusOK, staffList)
+}
+
+
+
+// GET /staff/:id - Get staff information by staff ID
+func getStaffByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Query to get staff details
+	query := `SELECT staff_id, first_name, last_name, email, role FROM Staff WHERE staff_id = ?`
+	row := db.QueryRow(query, id)
+
+	var staffID int
+	var firstName, lastName, email, role string
+
+	// Scan the row into variables
+	err := row.Scan(&staffID, &firstName, &lastName, &email, &role)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Staff not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve staff information", "details": err.Error()})
+		}
+		return
+	}
+
+	// Return the staff information as a JSON response
+	c.JSON(http.StatusOK, gin.H{
+		"staff_id":   staffID,
+		"first_name": firstName,
+		"last_name":  lastName,
+		"email":      email,
+		"role":       role,
+	})
+}
+
+// Staff Reservation Endpoints
+
+// GET /schedules - Get all staff schedules
+func getAllSchedules(c *gin.Context) {
+	rows, err := db.Query(`SELECT staff_id, shift_date, shift_time FROM Staff_Schedule`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve schedules", "details": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var schedules []map[string]interface{}
+	for rows.Next() {
+		var staffID int
+		var shiftDate, shiftTime string
+
+		if err := rows.Scan(&staffID, &shiftDate, &shiftTime); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse schedule", "details": err.Error()})
+			return
+		}
+
+		schedules = append(schedules, gin.H{
+			"staff_id":   staffID,
+			"shift_date": shiftDate,
+			"shift_time": shiftTime,
+		})
+	}
+
+	c.JSON(http.StatusOK, schedules)
+}
+
+// POST /schedule - Add staff to schedule
+func addToSchedule(c *gin.Context) {
+	var s Schedule
+	if err := c.ShouldBindJSON(&s); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	query := `INSERT INTO Staff_Schedule (staff_id, shift_date, shift_time) VALUES (?, ?, ?)`
+	result, err := db.Exec(query, s.StaffID, s.ShiftDate, s.ShiftTime)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add schedule", "details": err.Error()})
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	s.ScheduleID = int(id)
+	c.JSON(http.StatusCreated, s)
+}
+
+// DELETE /schedule/:id
+// Removes a schedule entry for a specific staff member based on staff_id (in URL),
+// shift_date and shift_time (as query parameters).
+// Example: DELETE /schedule/3?shift_date=Friday&shift_time=Night
+
+func removeFromSchedule(c *gin.Context) {
+	staffID := c.Param("id")
+	shiftDate := c.Query("shift_date")
+	shiftTime := c.Query("shift_time")
+
+	if shiftDate == "" || shiftTime == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing shift_date or shift_time query parameter"})
+		return
+	}
+
+	query := `
+		DELETE FROM Staff_Schedule
+		WHERE staff_id = ? AND shift_date = ? AND shift_time = ?
+	`
+	res, err := db.Exec(query, staffID, shiftDate, shiftTime)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete schedule", "details": err.Error()})
+		return
+	}
+
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule removed"})
+}
+
+// PUT /schedule/:id
+// Updates the shift_time for a specific staff member's schedule
+// using staff_id (in URL) and shift_date (in query parameter).
+// Example: PUT /schedule/3?shift_date=Friday&new_shift_time=Afternoon
+
+func updateSchedule(c *gin.Context) {
+	id := c.Param("id") // staff_id from URL
+
+	shiftDate := c.Query("shift_date")
+	newShiftTime := c.Query("new_shift_time")
+
+	if shiftDate == "" || newShiftTime == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing shift_date or new_shift_time in query parameters"})
+		return
+	}
+
+	query := `
+		UPDATE Staff_Schedule
+		SET shift_time = ?
+		WHERE staff_id = ? AND shift_date = ?
+	`
+
+	res, err := db.Exec(query, newShiftTime, id, shiftDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update schedule", "details": err.Error()})
+		return
+	}
+
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Shift time updated"})
 }

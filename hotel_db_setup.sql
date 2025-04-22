@@ -55,17 +55,6 @@ CREATE TABLE Reservations (
     FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE
 );
 
--- Create Staff Table
-CREATE TABLE Staff (
-    staff_id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL,
-    role ENUM('Manager', 'Receptionist', 'Housekeeping', 'Security') NOT NULL,
-    shift ENUM('Morning', 'Afternoon', 'Night') NOT NULL
-);
-
 -- Create Payments Table
 CREATE TABLE Payments (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,7 +91,27 @@ CREATE TABLE Reviews (
 CREATE TABLE Staff_Schedule (
     schedule_id INT AUTO_INCREMENT PRIMARY KEY,
     staff_id INT NOT NULL,
-    shift_date DATE NOT NULL,
-    shift ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
+    shift_date VARCHAR(50) NOT NULL,
+    shift_time ENUM('Morning', 'Afternoon', 'Night') NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Staff(staff_id) ON DELETE CASCADE
 );
+
+-- Create Staff Table
+CREATE TABLE Staff (
+    staff_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    role ENUM('Manager', 'Receptionist', 'Housekeeping', 'Security') NOT NULL
+);
+
+INSERT INTO Staff (first_name, last_name, email, role) VALUES
+('Alice', 'Smith', 'alice@gmail.com', 'Housekeeping'),
+('Bob', 'Johnson', 'bob@gmail.com', 'Receptionist'),
+('Charlie', 'Williams', 'charlie@gmail.com', 'Housekeeping'),
+('Diana', 'Brown', 'diana@gmail.com', 'Housekeeping'),
+('Ethan', 'Jones', 'ethan@gmail.com', 'Manager'),
+('Fiona', 'Garcia', 'fiona@gmail.com', 'Housekeeping'),
+('George', 'Miller', 'george@gmail.com', 'Housekeeping'),
+('Hannah', 'Davis', 'hannah@gmail.com', 'Security');
+

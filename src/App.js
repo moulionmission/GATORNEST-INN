@@ -54,7 +54,7 @@ const App = () => {
           </>
         } />
 
-        <Route path="/staff" element={<AdminScheduler />} /> {/* ✅ Staff scheduler route */}
+        <Route path="/staff" element={<AdminScheduler />} />
       </Routes>
       <Footer />
     </Router>
