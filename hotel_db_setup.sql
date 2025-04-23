@@ -107,6 +107,10 @@ CREATE TABLE Staff (
     role ENUM('Manager', 'Receptionist', 'Housekeeping', 'Security') NOT NULL
 );
 
+INSERT INTO Users (email, password_hash) VALUES
+('tarund2302@gmail.com', '$2a$10$eMWMtRpqmmW.Csp6sSQYSOeZaunKfDdvL0lcXjqQc5pHPZEq5xLpm'),
+('admin@gmail.com', '$2a$10$wMPF8JFdm3cSej97z3k92.X9fykHqN//e87wMC.9bsmlm7r6gtpJ.');
+
 INSERT INTO Staff (first_name, last_name, email, role) VALUES
 ('Alice', 'Smith', 'alice@gmail.com', 'Housekeeping'),
 ('Bob', 'Johnson', 'bob@gmail.com', 'Receptionist'),
@@ -116,4 +120,30 @@ INSERT INTO Staff (first_name, last_name, email, role) VALUES
 ('Fiona', 'Garcia', 'fiona@gmail.com', 'Housekeeping'),
 ('George', 'Miller', 'george@gmail.com', 'Housekeeping'),
 ('Hannah', 'Davis', 'hannah@gmail.com', 'Security');
+
+INSERT INTO Rooms (room_id, room_number, room_type, price_per_night, status) VALUES
+('101', 'Deluxe', 250.00, 'Available'),
+('102', 'Suite', 250.00, 'Available'),
+('501', 'Suite', 300.00, 'Available'),
+('201', 'Suite', 210.00, 'Available'),
+('103', 'Deluxe', 260.00, 'Available'),
+('104', 'Deluxe', 275.00, 'Booked'),
+('105', 'Deluxe', 255.00, 'Available'),
+('106', 'Deluxe', 265.00, 'Maintenance'),
+('107', 'Deluxe', 270.00, 'Available'),
+('402', 'Single', 95.00, 'Available'),
+('403', 'Single', 85.00, 'Booked'),
+('404', 'Single', 92.00, 'Available'),
+('405', 'Single', 88.00, 'Maintenance'),
+('406', 'Single', 100.00, 'Available'),
+('202', 'Suite', 220.00, 'Available'),
+('203', 'Suite', 230.00, 'Booked'),
+('204', 'Suite', 240.00, 'Available'),
+('205', 'Suite', 215.00, 'Maintenance'),
+('206', 'Suite', 235.00, 'Available'),
+('502', 'Suite', 310.00, 'Available'),
+('503', 'Suite', 320.00, 'Booked'),
+('504', 'Suite', 290.00, 'Available'),
+('505', 'Suite', 305.00, 'Maintenance'),
+('506', 'Suite', 330.00, 'Available');
 
